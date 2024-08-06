@@ -1,0 +1,174 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#define MAX_SIZE 100 // Maximum number of students
+
+typedef struct {
+    char name[100];
+    int studentID;
+    char grade;
+} Student;
+
+typedef struct {
+    Student students[MAX_SIZE];
+    int size;
+} StudentList;
+
+// Function prototypes
+void initialize(StudentList *list);
+int addStudent(StudentList *list, char *name, int studentID, char grade);
+int removeStudent(StudentList *list, int studentID);
+int updateGrade(StudentList *list, int studentID, char newGrade);
+void displayAllStudents(StudentList *list);
+int findStudentIndex(StudentList *list, int studentID);
+
+int main() {
+    StudentList list;
+    initialize(&list);
+
+    int choice, studentID;
+    char name[100];
+    char grade;
+    
+    while (1) {
+        printf("\nStudent Grade Management System:\n");
+        printf("1. Add Student\n");
+        printf("2. Remove Student\n");
+        printf("3. Update Grade\n");
+        printf("4. Display All Students\n");
+        printf("5. Quit\n");
+        printf("Enter your choice (1-5): ");
+        scanf("%d", &choice);
+        getchar(); // Consume newline character left by scanf
+
+        switch (choice) {
+            case 1:
+                printf("Enter student name: ");
+                fgets(name, sizeof(name), stdin);
+                name[strcspn(name, "\n")] = '\0'; // Remove trailing newline
+                printf("Enter student ID: ");
+                scanf("%d", &studentID);
+                getchar(); // Consume newline character left by scanf
+                printf("Enter student grade (A, B, C, D, F): ");
+                scanf("%c", &grade);
+                getchar(); // Consume newline character left by scanf
+                if (addStudent(&list, name, studentID, grade) == 0) {
+                    printf("Student added successfully.\n");
+                } else {
+                    printf("Failed to add student. List may be full.\n");
+                }
+                break;
+
+            case 2:
+                printf("Enter student ID to remove: ");
+                scanf("%d", &studentID);
+                if (removeStudent(&list, studentID) == 0) {
+                    printf("Student removed successfully.\n");
+                } else {
+                    printf("Student with ID %d not found.\n", studentID);
+                }
+                break;
+
+            case 3:
+                printf("Enter student ID to update grade: ");
+                scanf("%d", &studentID);
+                printf("Enter new grade (A, B, C, D, F): ");
+                scanf(" %c", &grade); // Note the space before %c to skip whitespace
+                if (updateGrade(&list, studentID, grade) == 0) {
+                    printf("Grade updated successfully.\n");
+                } else {
+                    printf("Student with ID %d not found.\n", studentID);
+                }
+                break;
+
+            case 4:
+                displayAllStudents(&list);
+                break;
+
+            case 5:
+                printf("Exiting...\n");
+                return 0;
+
+            default:
+                printf("Invalid choice. Please try again.\n");
+                break;
+        }
+    }
+}
+
+// Initialize the list
+void initialize(StudentList *list) {
+    list->size = 0; // Start with an empty list
+}
+
+// Add a student to the list
+int addStudent(StudentList *list, char *name, int studentID, char grade) {
+    if (list->size >= MAX_SIZE) {
+        return -1; // List is full
+    }
+
+    // Check if studentID already exists
+    if (findStudentIndex(list, studentID) != -1) {
+        return -1; // Student with this ID already exists
+    }
+
+    // Add new student
+    strcpy(list->students[list->size].name, name);
+    list->students[list->size].studentID = studentID;
+    list->students[list->size].grade = grade;
+    list->size++;
+    return 0; // Success
+}
+
+// Remove a student from the list
+int removeStudent(StudentList *list, int studentID) {
+    int index = findStudentIndex(list, studentID);
+    if (index == -1) {
+        return -1; // Student not found
+    }
+
+    // Shift students to remove the one at index
+    for (int i = index; i < list->size - 1; i++) {
+        list->students[i] = list->students[i + 1];
+    }
+    list->size--;
+    return 0; // Success
+}
+
+// Update a student's grade
+int updateGrade(StudentList *list, int studentID, char newGrade) {
+    int index = findStudentIndex(list, studentID);
+    if (index == -1) {
+        return -1; // Student not found
+    }
+
+    // Update grade
+    list->students[index].grade = newGrade;
+    return 0; // Success
+}
+
+// Display all students
+void displayAllStudents(StudentList *list) {
+    if (list->size == 0) {
+        printf("No students in the list.\n");
+        return;
+    }
+
+    printf("Student List:\n");
+    for (int i = 0; i < list->size; i++) {
+        printf("Name: %s, ID: %d, Grade: %c\n",
+               list->students[i].name,
+               list->students[i].studentID,
+               list->students[i].grade);
+    }
+}
+
+// Find the index of a student by their ID
+int findStudentIndex(StudentList *list, int studentID) {
+    for (int i = 0; i < list->size; i++) {
+        if (list->students[i].studentID == studentID) {
+            return i; // Found the student
+        }
+    }
+    return -1; // Student not found
